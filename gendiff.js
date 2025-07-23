@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import parseFile from './src/parseFile.js'; // Importa la función de análisis
+import parseFile from './src/parseFile.js';
+import genDiff from './src/genDiff.js'; // ¡Importa la nueva función!
 
 const program = new Command();
 
@@ -11,18 +12,16 @@ program
   .option('-f, --format <type>', 'output format', 'stylish')
   .argument('<filepath1>', 'path to first file')
   .argument('<filepath2>', 'path to second file')
-  .action((filepath1, filepath2, options) => { // Define la acción a ejecutar
-    // Lee y analiza el primer archivo
+  .action((filepath1, filepath2, options) => {
+    // 1. Lee y analiza los archivos (esto ya lo tienes hecho)
     const data1 = parseFile(filepath1);
-    // Lee y analiza el segundo archivo
     const data2 = parseFile(filepath2);
 
-    // Por ahora, solo imprimimos los datos analizados para verificar que funciona
-    console.log('Parsed Data from file1:', data1);
-    console.log('Parsed Data from file2:', data2);
+    // 2. ¡Compara los datos!
+    const diffTree = genDiff(data1, data2);
 
-    // La lógica para comparar estos datos y generar la diferencia
-    // se implementará en los siguientes pasos.
+    // 3. Imprime el resultado de la comparación (el "árbol de diferencias")
+    console.log(diffTree);
   });
 
-program.parse(process.argv); // Procesa los argumentos de la línea de comandos
+program.parse(process.argv);
