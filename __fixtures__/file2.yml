@@ -1,0 +1,4 @@
+# __fixtures__/file2.yml
+timeout: 20
+verbose: true
+host: codica.io

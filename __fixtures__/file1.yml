@@ -1,0 +1,5 @@
+# __fixtures__/file1.yml
+host: codica.io
+timeout: 50
+proxy: 123.234.53.22
+follow: false
