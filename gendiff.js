@@ -1,46 +1,42 @@
-#!/usr/bin/env node
+import _ from 'lodash';
 
-import { Command } from 'commander';
-import { fileURLToPath } from 'url';
-import parseFile from './src/parsers/index.js'; // <--- NUEVA IMPORTACIÓN DEL PARSER
-import genDiffCore from './src/genDiff.js';    // <--- IMPORTA TU LOGICA CENTRAL DE genDiff
-import formatStylish from './src/formatters/stylish.js'; // <--- NUEVA IMPORTACIÓN DEL FORMATEADOR STYLISH
+const genDiff = (obj1, obj2) => {
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
 
-// =========================================================================
-// La función principal 'gendiff' que orquesta todo el proceso.
-const gendiff = (filepath1, filepath2, formatName = 'stylish') => {
-  // 1. Leer y parsear los archivos usando el nuevo módulo parsers
-  const data1 = parseFile(filepath1);
-  const data2 = parseFile(filepath2);
+  const allKeys = _.sortBy(_.union(keys1, keys2));
 
-  // 2. Generar el árbol de diferencias usando tu lógica central de genDiff
-  const diffTree = genDiffCore(data1, data2);
+  return allKeys.map((key) => {
+    // 1. Ambas claves no están presentes (caso de error, no debería ocurrir aquí)
+    if (!_.has(obj1, key) && !_.has(obj2, key)) {
+      return { key, type: 'unchanged', value: null }; // O manejar como error
+    }
 
-  // 3. Formatear el árbol de diferencias según el formato solicitado
-  // Por ahora, solo tenemos 'stylish'. Si implementas más, aquí habría un 'switch'.
-  if (formatName === 'stylish') {
-    return formatStylish(diffTree);
-  }
-  // Puedes añadir un throw new Error('Unknown format') para otros formatos
-  return `Unknown format: ${formatName}`;
-};
-// =========================================================================
+    // 2. La clave fue eliminada
+    if (!_.has(obj2, key)) {
+      return { key, type: 'deleted', value: obj1[key] };
+    }
 
-const program = new Command();
+    // 3. La clave fue añadida
+    if (!_.has(obj1, key)) {
+      return { key, type: 'added', value: obj2[key] };
+    }
 
-program
-  .version('1.0.0', '-V, --version', 'output the version number')
-  .description('Compares two configuration files and shows a difference.')
-  .option('-f, --format <type>', 'output format', 'stylish')
-  .argument('<filepath1>', 'path to first file')
-  .argument('<filepath2>', 'path to second file')
-  .action((filepath1, filepath2, options) => {
-    const result = gendiff(filepath1, filepath2, options.format);
-    console.log(result);
+    // 4. Ambos valores son objetos y son diferentes (recursión)
+    if (_.isObject(obj1[key]) && _.isObject(obj2[key])) {
+        // Llama a la función genDiff RECURSIVAMENTE
+        const children = genDiff(obj1[key], obj2[key]);
+        return { key, type: 'nested', children };
+    }
+
+    // 5. Los valores son primitivos y son diferentes
+    if (obj1[key] !== obj2[key]) {
+      return { key, type: 'changed', oldValue: obj1[key], newValue: obj2[key] };
+    }
+
+    // 6. Los valores son iguales (primitivos o objetos idénticos)
+    return { key, type: 'unchanged', value: obj1[key] };
   });
+};
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  program.parse(process.argv);
-}
-
-export default gendiff;
+export default genDiff;
