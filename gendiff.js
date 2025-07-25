@@ -1,19 +1,28 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-// No importaremos parseFile ni genDiff aquí directamente por ahora,
-// serán parte de una nueva función principal.
+import { fileURLToPath } from 'url';
+import parseFile from './src/parsers/index.js'; // <--- NUEVA IMPORTACIÓN DEL PARSER
+import genDiffCore from './src/genDiff.js';    // <--- IMPORTA TU LOGICA CENTRAL DE genDiff
+import formatStylish from './src/formatters/stylish.js'; // <--- NUEVA IMPORTACIÓN DEL FORMATEADOR STYLISH
 
 // =========================================================================
-// PASO CLAVE: Crear una función principal 'gendiff' que haga todo el trabajo.
-// Por ahora, solo es un placeholder. La implementaremos de verdad después.
-// Esta función ES LA QUE VAMOS A PROBAR.
+// La función principal 'gendiff' que orquesta todo el proceso.
 const gendiff = (filepath1, filepath2, formatName = 'stylish') => {
-  // **PENDIENTE: Aquí irá la lógica de leer, comparar y formatear.**
-  // Por ahora, para que la prueba pueda compilar, puedes devolver un string vacío
-  // o un mensaje temporal. Lo importante es que esta función exista y sea exportada.
-  console.log(`Comparando: ${filepath1} y ${filepath2} con formato ${formatName}`);
-  return 'Not Implemented Yet'; // Esto fallará la prueba, ¡lo cual es bueno en TDD!
+  // 1. Leer y parsear los archivos usando el nuevo módulo parsers
+  const data1 = parseFile(filepath1);
+  const data2 = parseFile(filepath2);
+
+  // 2. Generar el árbol de diferencias usando tu lógica central de genDiff
+  const diffTree = genDiffCore(data1, data2);
+
+  // 3. Formatear el árbol de diferencias según el formato solicitado
+  // Por ahora, solo tenemos 'stylish'. Si implementas más, aquí habría un 'switch'.
+  if (formatName === 'stylish') {
+    return formatStylish(diffTree);
+  }
+  // Puedes añadir un throw new Error('Unknown format') para otros formatos
+  return `Unknown format: ${formatName}`;
 };
 // =========================================================================
 
@@ -26,14 +35,12 @@ program
   .argument('<filepath1>', 'path to first file')
   .argument('<filepath2>', 'path to second file')
   .action((filepath1, filepath2, options) => {
-    // La acción del CLI ahora llamará a nuestra nueva función principal
     const result = gendiff(filepath1, filepath2, options.format);
-    console.log(result); // Y luego imprime su resultado
+    console.log(result);
   });
 
-program.parse(process.argv);
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  program.parse(process.argv);
+}
 
-// =========================================================================
-// ¡IMPORTANTE! Exporta la función principal para que Jest pueda probarla.
 export default gendiff;
-// =========================================================================

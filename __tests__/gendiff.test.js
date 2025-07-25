@@ -1,72 +1,59 @@
+// __tests__/gendiff.test.js
+
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
+// IMPORTANTE: Ahora importamos la función 'gendiff' PRINCIPAL
+// que exportamos desde el archivo 'gendiff.js' en la raíz.
+import gendiff from '../gendiff.js'; // Ajusta la ruta si tu gendiff.js está en otro lugar
 
-import genDiff from '../src/genDiff.js';
-// Estas líneas construyen una versión de '__dirname' para módulos ESM.
-// Te permiten construir rutas como: 'tu-proyecto/__fixtures__/file1.json'
+// Helper para obtener __dirname equivalente en ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Función auxiliar que te ayuda a obtener la ruta completa a un archivo en '__fixtures__'.
 const getFixturePath = (filename) => join(__dirname, '..', '__fixtures__', filename);
 
-// Estas son las rutas a tus archivos de ejemplo JSON.
-// Aunque para esta prueba usaremos los datos parseados directamente,
-// esta configuración es útil si quisieras leer los archivos dentro de la prueba.
-const file1Path = getFixturePath('file1.json');
-const file2Path = getFixturePath('file2.json');
+// Rutas a tus archivos JSON de prueba
+const json1Path = getFixturePath('file1.json');
+const json2Path = getFixturePath('file2.json');
 
-// Aquí definimos los objetos JavaScript que representan el contenido
-// de file1.json y file2.json *después de que parseFile los haya procesado*.
-// Jest le pasará estos objetos directamente a tu función genDiff.
-const parsedData1 = {
-  "host": "codica.io",
-  "timeout": 50,
-  "proxy": "123.234.53.22",
-  "follow": false
-};
+// Rutas a tus nuevos archivos YAML de prueba
+const yml1Path = getFixturePath('file1.yml');
+const yml2Path = getFixturePath('file2.yml');
 
-const parsedData2 = {
-  "timeout": 20,
-  "verbose": true,
-  "host": "codica.io"
-};
+// =========================================================================
+// Define la SALIDA ESPERADA para el formato 'stylish'.
+// Esta es la cadena de texto exacta que tu programa debería imprimir.
+// La indentación y los símbolos (+, -, sin símbolo) son CRUCIALES.
+const expectedStylishDiff = `{
+  - follow: false
+    host: codica.io
+  - proxy: 123.234.53.22
+  - timeout: 50
+  + timeout: 20
+  + verbose: true
+}`;
+// =========================================================================
 
-// Este es el "árbol de diferencias" exacto que tu función genDiff
-// debería producir cuando compara parsedData1 y parsedData2.
-// Jest comparará el resultado REAL de tu función con este resultado ESPERADO.
-// ¡Es crucial que este array sea idéntico al que genera tu genDiff!
-const expectedFlatDiff = [
-  { key: 'follow', type: 'deleted', value: false },
-  { key: 'host', type: 'unchanged', value: 'codica.io' },
-  { key: 'proxy', type: 'deleted', value: '123.234.53.22' },
-  { key: 'timeout', type: 'changed', oldValue: 50, newValue: 20 },
-  { key: 'verbose', type: 'added', value: true },
-];
-
-
-
-// 'describe' es una forma de agrupar pruebas relacionadas.
-// Piensa en ello como una "categoría" para tus pruebas.
-// 'genDiff function' es el nombre de esta categoría.
-describe('genDiff function', () => {
-
-  // 'test' (o 'it') define una prueba individual.
-  // El primer argumento es una descripción CLARA de lo que esta prueba verifica.
-  test('should compare flat JSON files correctly', () => {
-
-    // Paso A: Ejecutar la función que estamos probando.
-    // Llamamos a tu función 'genDiff' con los datos de entrada.
-    const result = genDiff(parsedData1, parsedData2);
-
-       // 'expect(result)' toma el resultado real de tu función.
-    // '.toEqual(expectedFlatDiff)' es un "matcher" de Jest que compara
-    // el resultado real con el resultado esperado (comparación profunda de objetos/arrays).
-    // Si son idénticos, la prueba PASA. Si son diferentes, la prueba FALLA.
-    expect(result).toEqual(expectedFlatDiff);
+describe('gendiff CLI', () => {
+  // Prueba para archivos JSON (la que ya tenías, pero ahora esperando la salida formateada)
+  test('should compare flat JSON files and return stylish output', () => {
+    // Llama a la función principal 'gendiff' con las rutas a los archivos
+    // y el formato por defecto ('stylish').
+    const result = gendiff(json1Path, json2Path, 'stylish');
+    expect(result).toEqual(expectedStylishDiff);
   });
 
-  // Puedes añadir más bloques 'test' aquí para probar otros escenarios,
-  // como objetos vacíos, archivos con solo cambios, etc.
+  // NUEVA PRUEBA: Para archivos YAML
+  test('should compare flat YAML files and return stylish output', () => {
+    // Llama a la función principal 'gendiff' con las rutas a los archivos YAML
+    const result = gendiff(yml1Path, yml2Path, 'stylish');
+    expect(result).toEqual(expectedStylishDiff); // Debería ser la misma salida formateada
+  });
+
+  // Puedes añadir más pruebas aquí en el futuro:
+  // - Archivos con objetos anidados
+  // - Diferentes formatos de salida (plain, json - cuando los implementes)
+  // - Archivos con claves que contienen números o caracteres especiales
+  // - Casos de errores (ej. archivo no encontrado)
 });
