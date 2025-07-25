@@ -1,48 +1,43 @@
-// src/formatters/stylish.js
+import _ from 'lodash';
 
-// Función auxiliar para formatear los valores de forma recursiva
 const stringify = (value, depth) => {
-  if (!_.isObject(value)) {
-    return value; // Devuelve el valor tal cual si no es un objeto
+  if (!_.isPlainObject(value)) {
+    return String(value);
   }
-
-  const indent = '    '.repeat(depth); // Indentación para la profundidad actual
-  const bracketIndent = '    '.repeat(depth - 1);
-
+  const indent = '    '.repeat(depth + 1);
+  const closingBracketIndent = '    '.repeat(depth);
   const lines = Object.entries(value).map(([key, val]) => {
     return `${indent}${key}: ${stringify(val, depth + 1)}`;
   });
-
-  return `{\n${lines.join('\n')}\n${bracketIndent}}`;
+  return `{\n${lines.join('\n')}\n${closingBracketIndent}}`;
 };
 
-// Función principal para formatear el árbol de diferencias
 const formatStylish = (diffTree, depth = 1) => {
-  // Indentación para el nivel actual
-  const indent = '    '.repeat(depth - 1);
-  const diffIndent = '  '.repeat(depth - 1);
+  const indent = '    '.repeat(depth);
+  const closingBracketIndent = '    '.repeat(depth - 1);
 
   const lines = diffTree.map((node) => {
     switch (node.type) {
       case 'added':
-        return `${diffIndent}+ ${node.key}: ${stringify(node.value, depth + 1)}`;
+        return `${indent.slice(0, -2)}+ ${node.key}: ${stringify(node.value, depth)}`;
       case 'deleted':
-        return `${diffIndent}- ${node.key}: ${stringify(node.value, depth + 1)}`;
+        return `${indent.slice(0, -2)}- ${node.key}: ${stringify(node.value, depth)}`;
       case 'unchanged':
-        return `${indent}  ${node.key}: ${stringify(node.value, depth + 1)}`;
-      case 'changed':
-        // Para valores cambiados, mostramos la versión eliminada y la añadida
-        return `${diffIndent}- ${node.key}: ${stringify(node.oldValue, depth + 1)}\n${diffIndent}+ ${node.key}: ${stringify(node.newValue, depth + 1)}`;
+        return `${indent}${node.key}: ${stringify(node.value, depth)}`;
+      case 'changed': {
+        const deletedLine = `${indent.slice(0, -2)}- ${node.key}: ${stringify(node.oldValue, depth)}`;
+        const addedLine = `${indent.slice(0, -2)}+ ${node.key}: ${stringify(node.newValue, depth)}`;
+        return `${deletedLine}\n${addedLine}`;
+      }
       case 'nested':
-        // Si el nodo es anidado, llamamos a la función de forma RECURSIVA
         const childrenString = formatStylish(node.children, depth + 1);
-        return `${indent}  ${node.key}: ${childrenString}`;
+        return `${indent}${node.key}: ${childrenString}`;
       default:
         throw new Error(`Unknown node type: ${node.type}`);
     }
   });
 
-  return `{\n${lines.join('\n')}\n${indent}}`;
+  return `{\n${lines.join('\n')}\n${closingBracketIndent}}`;
 };
 
 export default formatStylish;

@@ -1,18 +1,20 @@
 // src/parsers/index.js
-import { readFileSync } from 'fs'; // Para leer archivos del sistema
-import { extname } from 'path';    // Para obtener la extensión del archivo
-import yaml from 'js-yaml';       // Importa la librería js-yaml
+import { readFileSync } from 'fs';
+import { extname } from 'path';
+import yaml from 'js-yaml';
 
 const parseFile = (filepath) => {
-  const fileContent = readFileSync(filepath, 'utf-8'); // Lee el contenido del archivo
-  const fileExtension = extname(filepath); // Obtiene la extensión (ej. '.json', '.yml')
+  // Esta línea lee el archivo del disco.
+  const fileContent = readFileSync(filepath, 'utf-8'); 
+  const fileExtension = extname(filepath);
 
   switch (fileExtension) {
     case '.json':
-      return JSON.parse(fileContent); // Usa JSON.parse para archivos JSON
+      // Asegúrate de que JSON.parse se aplique al contenido del archivo
+      return JSON.parse(fileContent);
     case '.yml':
     case '.yaml':
-      return yaml.load(fileContent); // Usa yaml.load para archivos YAML
+      return yaml.load(fileContent);
     default:
       throw new Error(`Unknown file extension: ${fileExtension}`);
   }
