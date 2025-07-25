@@ -1,28 +1,65 @@
+// src/gendiff.js
 import _ from 'lodash';
+import parseFile from './parsers/index.js';
+import formatOutput from './formatters/index.js';
 
-const genDiff = (obj1, obj2) => {
-  const allKeys = _.sortBy(_.union(Object.keys(obj1), Object.keys(obj2)));
+const buildDiffTree = (obj1, obj2) => {
+  // Obtener todas las claves únicas de ambos objetos
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+  
+  // Combinar todas las claves y ordenarlas alfabéticamente
+  // Esto es lo que esperan los tests de Hexlet
+  const allKeys = _.sortBy(_.union(keys1, keys2));
 
   return allKeys.map((key) => {
-    // La clave solo existe en el primer objeto (eliminada)
-    if (!_.has(obj2, key)) {
+    const hasKey1 = _.has(obj1, key);
+    const hasKey2 = _.has(obj2, key);
+
+    if (!hasKey2) {
+      // Clave solo existe en obj1 (eliminada)
       return { key, type: 'deleted', value: obj1[key] };
     }
-    // La clave solo existe en el segundo objeto (añadida)
-    if (!_.has(obj1, key)) {
+    
+    if (!hasKey1) {
+      // Clave solo existe en obj2 (añadida)
       return { key, type: 'added', value: obj2[key] };
     }
-    // Ambas claves existen y sus valores son objetos (recursión)
-    if (_.isPlainObject(obj1[key]) && _.isPlainObject(obj2[key])) {
-      return { key, type: 'nested', children: genDiff(obj1[key], obj2[key]) };
+
+    const value1 = obj1[key];
+    const value2 = obj2[key];
+
+    // Ambos valores son objetos - recursión
+    if (_.isPlainObject(value1) && _.isPlainObject(value2)) {
+      return { 
+        key, 
+        type: 'nested', 
+        children: buildDiffTree(value1, value2) 
+      };
     }
-    // Ambas claves existen, los valores son diferentes (cambiado)
-    if (obj1[key] !== obj2[key]) {
-      return { key, type: 'changed', oldValue: obj1[key], newValue: obj2[key] };
+
+    // Valores diferentes - cambio
+    if (value1 !== value2) {
+      return { 
+        key, 
+        type: 'changed', 
+        oldValue: value1, 
+        newValue: value2 
+      };
     }
-    // Ambas claves existen, los valores son iguales (sin cambios)
-    return { key, type: 'unchanged', value: obj1[key] };
+
+    // Valores iguales - sin cambio
+    return { key, type: 'unchanged', value: value1 };
   });
+};
+
+const genDiff = (filepath1, filepath2, formatName = 'stylish') => {
+  const obj1 = parseFile(filepath1);
+  const obj2 = parseFile(filepath2);
+
+  const diffTree = buildDiffTree(obj1, obj2);
+
+  return formatOutput(diffTree, formatName);
 };
 
 export default genDiff;

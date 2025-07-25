@@ -2,23 +2,7 @@
 
 import { Command } from 'commander';
 import { fileURLToPath } from 'url';
-import parseFile from './src/parsers/index.js';
-import genDiffCore from './src/genDiff.js';
-import formatStylish from './src/formatters/stylish.js';
-
-const gendiff = (filepath1, filepath2, formatName = 'stylish') => {
-  // Asegúrate de que estas llamadas a parseFile() estén correctas
-  const data1 = parseFile(filepath1);
-  const data2 = parseFile(filepath2);
-
-  const diffTree = genDiffCore(data1, data2);
-
-  if (formatName === 'stylish') {
-    return formatStylish(diffTree);
-  }
-
-  throw new Error(`Unknown format: ${formatName}`);
-};
+import genDiff from './src/gendiff.js'; // Importa la función genDiff del archivo src
 
 const program = new Command();
 
@@ -30,7 +14,7 @@ program
   .argument('<filepath2>', 'path to second file')
   .action((filepath1, filepath2, options) => {
     try {
-      const result = gendiff(filepath1, filepath2, options.format);
+      const result = genDiff(filepath1, filepath2, options.format);
       console.log(result);
     } catch (e) {
       console.error(e.message);
@@ -42,4 +26,4 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   program.parse(process.argv);
 }
 
-export default gendiff;
+export default genDiff;

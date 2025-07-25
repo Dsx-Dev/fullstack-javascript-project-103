@@ -1,23 +1,61 @@
-import { readFileSync } from 'fs';
-import { resolve as pathResolve, extname } from 'path';
 
-const parseFile = (filepath) => {
-  // Construye la ruta absoluta del archivo para manejar rutas relativas y absolutas
-  const absolutePath = pathResolve(process.cwd(), filepath);
+// src/gendiff.js
+import _ from 'lodash';
+import parseFile from './parsers/index.js';
+import formatOutput from './formatters/index.js';
 
-  // Lee el contenido del archivo de forma síncrona
-  const fileContent = readFileSync(absolutePath, 'utf-8');
+const buildDiffTree = (obj1, obj2) => {
+  // Ordenar alfabéticamente para consistencia con el formatter
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+  const allKeys = _.sortBy(_.union(keys1, keys2));
 
-  // Obtiene la extensión del archivo (ej. 'json' de '.json')
-  const fileExtension = extname(filepath).slice(1);
+  return allKeys.map((key) => {
+    const hasKey1 = _.has(obj1, key);
+    const hasKey2 = _.has(obj2, key);
 
-  // Analiza el contenido según la extensión (por ahora, solo JSON)
-  if (fileExtension === 'json') {
-    return JSON.parse(fileContent);
-  }
+    if (!hasKey2) {
+      // Clave solo existe en obj1 (eliminada)
+      return { key, type: 'deleted', value: obj1[key] };
+    }
+    
+    if (!hasKey1) {
+      // Clave solo existe en obj2 (añadida)
+      return { key, type: 'added', value: obj2[key] };
+    }
 
-  // Lanza un error si la extensión no es compatible
-  throw new Error(`Unsupported file extension: ${fileExtension}`);
+    const value1 = obj1[key];
+    const value2 = obj2[key];
+
+    // Ambos valores son objetos - recursión
+    if (_.isPlainObject(value1) && _.isPlainObject(value2)) {
+      return { 
+        key, 
+        type: 'nested', 
+        children: buildDiffTree(value1, value2) 
+      };
+    }
+
+    // Valores diferentes - cambio
+    if (value1 !== value2) {
+      return { 
+        key, 
+        type: 'changed', 
+        oldValue: value1, 
+        newValue: value2 
+      };
+    }
+
+    // Valores iguales - sin cambio
+    return { key, type: 'unchanged', value: value1 };
+  });
 };
 
-export default parseFile;
+const genDiff = (filepath1, filepath2, formatName = 'stylish') => {
+  const obj1 = parseFile(filepath1);
+  const obj2 = parseFile(filepath2);
+
+  const diffTree = buildDiffTree(obj1, obj2);
+
+  return formatOutput(diffTree, formatName);
+};

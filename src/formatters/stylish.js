@@ -6,9 +6,13 @@ const stringify = (value, depth) => {
   }
   const indent = '    '.repeat(depth + 1);
   const closingBracketIndent = '    '.repeat(depth);
-  const lines = Object.entries(value).map(([key, val]) => {
-    return `${indent}${key}: ${stringify(val, depth + 1)}`;
+  
+  // Ordenar alfabéticamente las claves para consistencia
+  const sortedKeys = _.sortBy(Object.keys(value));
+  const lines = sortedKeys.map((key) => {
+    return `${indent}${key}: ${stringify(value[key], depth + 1)}`;
   });
+  
   return `{\n${lines.join('\n')}\n${closingBracketIndent}}`;
 };
 
