@@ -2,12 +2,11 @@ import { readFileSync } from 'fs';
 import { extname } from 'path';
 import renderStylishTree from './formatters/stylish.js';
 import renderToPlainText from './formatters/plain.js';
-import jsonFormatter from './formatters/jsonFormatter.js';
 import parseFile from './parsers.js';
 import buildDiffTree from './treeBuilder.js';
 
 const formatters = {
-  json: jsonFormatter,
+  json: (data) => JSON.stringify(data, null, 2),
   stylish: renderStylishTree,
   plain: renderToPlainText,
 };

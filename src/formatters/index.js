@@ -1,11 +1,10 @@
 import stylish from './stylish.js';
 import plain from './plain.js';
-import jsonFormatter from './jsonFormatter.js';
 
 const formatters = {
   stylish: (data) => stylish(data),
   plain: (data) => plain(data),
-  json: (data) => jsonFormatter(data),
+  json: (data) => JSON.stringify(data, null, 2),
 };
 
 export default (data, formatName) => {
