@@ -1,18 +1,16 @@
-// src/formatters/index.js
-import formatStylish from './stylish.js';
-import formatPlain from './plain.js';
+import stylish from './stylish.js';
+import plain from './plain.js';
+import jsonFormatter from './jsonFormatter.js';
 
-const formatOutput = (diffTree, formatName) => {
-  switch (formatName) {
-    case 'stylish':
-      return formatStylish(diffTree);
-    case 'plain':
-      return formatPlain(diffTree);
-    case 'json':
-      return JSON.stringify(diffTree, null, 2); // <--- Añade este caso
-    default:
-      throw new Error(`Unknown format: ${formatName}`);
-  }
+const formatters = {
+  stylish: (data) => stylish(data),
+  plain: (data) => plain(data),
+  json: (data) => jsonFormatter(data),
 };
 
-export default formatOutput;
+export default (data, formatName) => {
+  if (!formatters[formatName]) {
+    throw new Error(`Unknown format: '${formatName}'!`);
+  }
+  return formatters[formatName](data);
+};

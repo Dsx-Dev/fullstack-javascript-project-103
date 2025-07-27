@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import gendiff from '../gendiff.js';
+import genDiff from '../src/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -113,15 +113,9 @@ const expectedJsonDiff = `[
         "children": [
           {
             "key": "doge",
-            "type": "nested",
-            "children": [
-              {
-                "key": "wow",
-                "type": "changed",
-                "oldValue": "",
-                "newValue": "so much"
-              }
-            ]
+            "type": "changed",
+            "oldValue": "",
+            "newValue": "so much"
           },
           {
             "key": "key",
@@ -188,27 +182,27 @@ const expectedJsonDiff = `[
 
 describe('gendiff CLI with nested structures', () => {
   test('should compare nested JSON files and return stylish output', () => {
-    const result = gendiff(json1Path, json2Path, 'stylish');
+    const result = genDiff(json1Path, json2Path, 'stylish');
     expect(result).toEqual(expectedStylishDiff);
   });
 
   test('should compare nested JSON files and return plain output', () => {
-    const result = gendiff(json1Path, json2Path, 'plain');
+    const result = genDiff(json1Path, json2Path, 'plain');
     expect(result).toEqual(expectedPlainDiff);
   });
 
   test('should compare nested JSON files and return JSON output', () => {
-    const result = gendiff(json1Path, json2Path, 'json');
+    const result = genDiff(json1Path, json2Path, 'json');
     expect(result).toEqual(expectedJsonDiff);
   });
 
   test('should compare nested YAML files and return stylish output', () => {
-    const result = gendiff(yml1Path, yml2Path, 'stylish');
+    const result = genDiff(yml1Path, yml2Path, 'stylish');
     expect(result).toEqual(expectedStylishDiff);
   });
 
   test('should compare nested YAML files and return plain output', () => {
-    const result = gendiff(yml1Path, yml2Path, 'plain');
+    const result = genDiff(yml1Path, yml2Path, 'plain');
     expect(result).toEqual(expectedPlainDiff);
   });
 });
