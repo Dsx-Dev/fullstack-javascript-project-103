@@ -1,47 +1,59 @@
 import _ from 'lodash';
 
+const getIndent = (depth) => '    '.repeat(depth);
+
 const stringify = (value, depth) => {
   if (!_.isPlainObject(value)) {
     return String(value);
   }
-  const indent = '    '.repeat(depth + 1);
-  const closingBracketIndent = '    '.repeat(depth);
-  
-  // Ordenar alfabéticamente las claves para consistencia
-  const sortedKeys = _.sortBy(Object.keys(value));
-  const lines = sortedKeys.map((key) => {
-    return `${indent}${key}: ${stringify(value[key], depth + 1)}`;
-  });
-  
-  return `{\n${lines.join('\n')}\n${closingBracketIndent}}`;
+  const indent = getIndent(depth + 1);
+  const bracketIndent = getIndent(depth);
+  const lines = Object
+    .entries(value)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, val]) => `${indent}${key}: ${stringify(val, depth + 1)}`);
+
+  return [
+    '{',
+    ...lines,
+    `${bracketIndent}}`,
+  ].join('\n');
 };
 
-const formatStylish = (diffTree, depth = 1) => {
-  const indent = '    '.repeat(depth);
-  const closingBracketIndent = '    '.repeat(depth - 1);
+const formatStylish = (tree) => {
+  const iter = (node, depth) => {
+    const indent = getIndent(depth);
+    const bracketIndent = getIndent(depth - 1);
+    const lines = node.map((item) => {
+      const makeString = (value, sign) => `${indent.slice(0, -2)}${sign} ${item.key}: ${stringify(value, depth)}`;
 
-  const lines = diffTree.map((node) => {
-    switch (node.type) {
-      case 'added':
-        return `${indent.slice(0, -2)}+ ${node.key}: ${stringify(node.value, depth)}`;
-      case 'deleted':
-        return `${indent.slice(0, -2)}- ${node.key}: ${stringify(node.value, depth)}`;
-      case 'unchanged':
-        return `${indent}${node.key}: ${stringify(node.value, depth)}`;
-      case 'changed': {
-        const deletedLine = `${indent.slice(0, -2)}- ${node.key}: ${stringify(node.oldValue, depth)}`;
-        const addedLine = `${indent.slice(0, -2)}+ ${node.key}: ${stringify(node.newValue, depth)}`;
-        return `${deletedLine}\n${addedLine}`;
+      switch (item.type) {
+        case 'nested':
+          return `${indent}${item.key}: ${iter(item.children, depth + 1)}`;
+        case 'deleted':
+          return makeString(item.value, '-');
+        case 'added':
+          return makeString(item.value, '+');
+        case 'changed':
+          return [
+            makeString(item.oldValue, '-'),
+            makeString(item.newValue, '+'),
+          ].join('\n');
+        case 'unchanged':
+          return makeString(item.value, ' ');
+        default:
+          throw new Error(`Unknown type: ${item.type}`);
       }
-      case 'nested':
-        const childrenString = formatStylish(node.children, depth + 1);
-        return `${indent}${node.key}: ${childrenString}`;
-      default:
-        throw new Error(`Unknown node type: ${node.type}`);
-    }
-  });
+    });
 
-  return `{\n${lines.join('\n')}\n${closingBracketIndent}}`;
+    return [
+      '{',
+      ...lines,
+      `${bracketIndent}}`,
+    ].join('\n');
+  };
+
+  return iter(tree, 1);
 };
 
 export default formatStylish;

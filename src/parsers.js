@@ -6,7 +6,7 @@ const parsers = {
   yml: yaml.load,
 };
 
-export default function parseFile(data, extension) {
+const parseFile = (data, extension) => {
   const parser = parsers[extension];
 
   if (!parser) {
@@ -18,4 +18,6 @@ export default function parseFile(data, extension) {
   } catch (error) {
     throw new Error(`Failed to parse data with extension "${extension}": ${error.message}`);
   }
-}
+};
+
+export default parseFile;

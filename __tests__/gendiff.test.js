@@ -113,9 +113,15 @@ const expectedJsonDiff = `[
         "children": [
           {
             "key": "doge",
-            "type": "changed",
-            "oldValue": "",
-            "newValue": "so much"
+            "type": "nested",
+            "children": [
+              {
+                "key": "wow",
+                "type": "changed",
+                "oldValue": "",
+                "newValue": "so much"
+              }
+            ]
           },
           {
             "key": "key",

@@ -1,16 +1,2 @@
 # Directorios de dependencias
 node_modules/
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-
-# Reporte de cobertura de tests
-coverage/
-
-# Varios
-.DS_Store
-.env
-.npmrc
