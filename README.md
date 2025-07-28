@@ -98,7 +98,16 @@ Property 'common.setting3' was updated. From true to null
 
 Puedes ver el funcionamiento completo de la herramienta en esta grabación:
 
-[![asciicast](https://asciinema.org/a/LGT36BDWukmuBogcwkJsIrXXn.svg)](https://asciinema.org/a/LGT36BDWukmuBogcwkJsIrXXn)
+gendiff --format stylish __fixtures__/file1.json __fixtures__/file2.json
+    https://asciinema.org/a/Cy367u6mim2R41H2UXIjvhfpa
+
+ gendiff --format plain __fixtures__/file1.json __fixtures__/file2.json
+   https://asciinema.org/a/E6R6RdGQXdY78lvZ68rrITRI1
+
+
+gendiff --format json __fixtures__/file1.json __fixtures__/file2.json
+    https://asciinema.org/a/6slu1vGPk1rR3LrtBxR0Veq44
+
 
 ## Estructura del proyecto
 
@@ -132,8 +141,6 @@ Puedes ver el funcionamiento completo de la herramienta en esta grabación:
 # Ejecutar todos los tests
 npm test
 
-# Ejecutar tests con coverage
-npm run test:coverage
 ```
 
 ## Desarrollo
